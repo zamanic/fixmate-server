@@ -6,6 +6,7 @@ import { sendError } from "./lib/errors.js";
 import userRoutes from "./routes/userRoutes.js";
 import serviceRoutes from "./routes/serviceRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
+import paymentRoutes, { webhookHandler } from "./routes/paymentRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -27,6 +28,9 @@ app.use(
   })
 );
 
+// --- Stripe webhook: needs the RAW body, so it must precede express.json() ---
+app.post("/api/payments/webhook", express.raw({ type: "application/json" }), webhookHandler);
+
 app.use(express.json({ limit: "2mb" }));
 
 // --- Health check ---
@@ -42,6 +46,7 @@ app.get("/", (req, res) => {
 app.use("/api/users", userRoutes);
 app.use("/api/services", serviceRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/payments", paymentRoutes);
 
 // --- 404: unknown API route, same error envelope ---
 app.use((req, res) => {
