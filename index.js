@@ -1,7 +1,9 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import "dotenv/config";
 import { connectToMongoDB } from "./lib/mongo.js";
+import { sendError } from "./lib/errors.js";
+import userRoutes from "./routes/userRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -32,6 +34,22 @@ app.get("/", (req, res) => {
     service: "fixmate-server",
     time: new Date().toISOString(),
   });
+});
+
+// --- Routes ---
+app.use("/api/users", userRoutes);
+
+// --- 404: unknown API route, same error envelope ---
+app.use((req, res) => {
+  sendError(res, "INVALID_ID", `No route matches ${req.method} ${req.originalUrl}.`);
+});
+
+// --- Central error handler: Express 5 forwards async rejections here ---
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error("[fixmate] unhandled error:", err);
+  if (res.headersSent) return;
+  sendError(res, "SERVER_ERROR", "Something went wrong on our side. Please try again.");
 });
 
 await connectToMongoDB();
