@@ -1,7 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import { connectToMongoDB } from "./lib/mongo.js";
+import { connectToMongoDB, col } from "./lib/mongo.js";
 import { sendError } from "./lib/errors.js";
 import userRoutes from "./routes/userRoutes.js";
 import serviceRoutes from "./routes/serviceRoutes.js";
@@ -64,6 +64,24 @@ app.use((err, req, res, next) => {
 });
 
 await connectToMongoDB();
+
+// --- Indexes (CONTRACT §2). A failure warns instead of killing the server. ---
+try {
+  await Promise.all([
+    col("user").createIndex({ email: 1 }, { unique: true }),
+    col("services").createIndex({ technicianEmail: 1 }),
+    col("services").createIndex({ approvalStatus: 1, isAvailable: 1, createdAt: -1 }),
+    col("bookings").createIndex({ serviceId: 1 }),
+    col("bookings").createIndex({ customerEmail: 1 }),
+    col("bookings").createIndex({ technicianEmail: 1 }),
+    col("bookings").createIndex({ status: 1, customerEmail: 1 }),
+    col("payments").createIndex({ bookingId: 1 }, { unique: true }),
+    col("payments").createIndex({ stripeSessionId: 1 }, { unique: true }),
+  ]);
+  console.log("[fixmate] MongoDB indexes ensured.");
+} catch (err) {
+  console.warn("[fixmate] index creation skipped:", err.message);
+}
 
 // On Vercel the platform owns the listener; locally we listen ourselves.
 if (!process.env.VERCEL) {
