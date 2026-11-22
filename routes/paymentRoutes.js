@@ -170,6 +170,22 @@ router.get("/verify", verifyCustomer, async (req, res) => {
 });
 
 /**
+ * GET /api/payments/my — the signed-in customer's own payment history, newest
+ * first. Scoped by the JWT's email, never by a client-supplied filter.
+ */
+router.get("/my", verifyCustomer, async (req, res) => {
+  try {
+    const docs = await col("payments")
+      .find({ customerEmail: String(req.user.email).toLowerCase() })
+      .sort({ paidAt: -1 })
+      .toArray();
+    return res.json({ items: docs.map(shapePayment) });
+  } catch {
+    return sendError(res, "SERVER_ERROR", "Could not load your payments.");
+  }
+});
+
+/**
  * POST /api/payments/webhook — Stripe-owned signature is the proof, so no auth
  * middleware. `index.js` mounts this with `express.raw()` BEFORE `express.json()`
  * so `req.body` is the untouched raw payload Stripe signed.
