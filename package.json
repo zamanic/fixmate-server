@@ -1,0 +1,21 @@
+{
+  "name": "fixmate-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "FixMate API - Express + MongoDB + JWKS JWT verification + Stripe",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "seed": "node seed.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.10",
+    "express": "^5.3.0",
+    "jose": "^6.2.18",
+    "mongodb": "^7.9.1",
+    "stripe": "^23.2.0"
+  }
+}
