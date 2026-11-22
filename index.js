@@ -5,6 +5,7 @@ import { connectToMongoDB } from "./lib/mongo.js";
 import { sendError } from "./lib/errors.js";
 import userRoutes from "./routes/userRoutes.js";
 import serviceRoutes from "./routes/serviceRoutes.js";
+import bookingRoutes from "./routes/bookingRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -40,6 +41,7 @@ app.get("/", (req, res) => {
 // --- Routes ---
 app.use("/api/users", userRoutes);
 app.use("/api/services", serviceRoutes);
+app.use("/api/bookings", bookingRoutes);
 
 // --- 404: unknown API route, same error envelope ---
 app.use((req, res) => {
