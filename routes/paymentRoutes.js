@@ -112,9 +112,11 @@ router.post("/create-checkout-session", verifyCustomer, async (req, res) => {
       return sendError(res, "VALIDATION", "This job isn't ready to pay yet.");
     }
 
+    // No `payment_method_types` here on purpose: Stripe's current API manages
+    // the enabled payment methods from the Dashboard settings, and sending the
+    // parameter now fails the whole call with a StripeInvalidRequestError.
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      payment_method_types: ["card"],
       line_items: [
         {
           price_data: {
@@ -135,7 +137,25 @@ router.post("/create-checkout-session", verifyCustomer, async (req, res) => {
     });
 
     return res.json({ url: session.url, sessionId: session.id });
-  } catch {
+  } catch (err) {
+    // Stripe's own message is the only thing that separates a rejected payload
+    // from an outage, so it goes to the server log before the client is handed
+    // a toast-safe summary of it.
+    console.error("[payments] create-checkout-session failed:", err);
+    if (err?.type === "StripeAuthenticationError") {
+      return sendError(
+        res,
+        "PAYMENTS_NOT_CONFIGURED",
+        "Payments aren't set up on this server yet."
+      );
+    }
+    if (err?.type === "StripeInvalidRequestError") {
+      return sendError(
+        res,
+        "PAYMENT_PROVIDER_ERROR",
+        "Stripe rejected this checkout. Please try again."
+      );
+    }
     return sendError(res, "SERVER_ERROR", "Could not start the payment. Please try again.");
   }
 });
