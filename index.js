@@ -7,6 +7,7 @@ import userRoutes from "./routes/userRoutes.js";
 import serviceRoutes from "./routes/serviceRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import paymentRoutes, { webhookHandler } from "./routes/paymentRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -47,6 +48,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/services", serviceRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/admin", adminRoutes);
 
 // --- 404: unknown API route, same error envelope ---
 app.use((req, res) => {
